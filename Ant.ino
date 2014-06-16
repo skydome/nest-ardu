@@ -17,15 +17,15 @@ struct Pin {
   byte fixed[2];
 };
 
-Pin working = {8, LOW, {0, 0}, {    }, {    }};
+Pin working = {8, LOW, {0, 0}, {8, 0}, {8, 1}};
 Pin pulse =   {7, LOW, {0, 0}, {    }, {    }};
 Pin warp =    {6, LOW, {0, 0}, {6, 0}, {6, 1}};
 Pin weft =    {5, LOW, {0, 0}, {5, 0}, {5, 1}};
 Pin rope =    {4, LOW, {0, 0}, {4, 0}, {4, 1}};
 Pin unknown = {3, LOW, {0, 0}, {3, 0}, {3, 1}};
-
-// every 10 sec, send pulse count to nest
-const int pulseCountInterval = 10000;
+ 
+// every 30 sec, send pulse count to nest
+const int pulseCountInterval = 30000;
 // check health every 1 sec
 const int healthCheckInterval = 1000;
 
@@ -58,12 +58,14 @@ void healthCheck() {
   checkError(weft);
   checkError(rope);
   checkError(unknown);
+  checkWorkingError(working);
   if (digitalRead(working.PIN) == HIGH) {
     warp.state = LOW;
     weft.state = LOW;
     rope.state = LOW;
     unknown.state = LOW;
   }
+
 }
 
 void increasePulse() {
@@ -81,13 +83,27 @@ void calculatePulse() {
   pulse.counter[1] = 0;
 }
 
-void checkError(struct Pin &pin) {
+void checkError(struct Pin &pin) {  
   int tempState =  digitalRead(pin.PIN);
   if (tempState == HIGH && pin.state != tempState) {
     Serial.print("error : ");
     Serial.println(pin.PIN);
     sendReliableMessage(pin.failed);
   } else if (tempState == LOW && pin.state != tempState) {
+    Serial.print("fixed : ");
+    Serial.println(pin.PIN);
+    sendReliableMessage(pin.fixed);
+  }
+  pin.state = tempState;
+}
+
+void checkWorkingError(struct Pin &pin) {  
+  int tempState =  digitalRead(pin.PIN);
+  if (tempState == LOW && pin.state != tempState) {
+    Serial.print("error : ");
+    Serial.println(pin.PIN);
+    sendReliableMessage(pin.failed);
+  } else if (tempState == HIGH && pin.state != tempState) {
     Serial.print("fixed : ");
     Serial.println(pin.PIN);
     sendReliableMessage(pin.fixed);
