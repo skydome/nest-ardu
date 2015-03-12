@@ -19,13 +19,13 @@ struct Pin {
 
 Pin working = {8, LOW, {0, 0}, {8, 0}, {8, 1}};
 Pin pulse =   {7, LOW, {0, 0}, {    }, {    }};
-Pin warp =    {6, LOW, {0, 0}, {6, 0}, {6, 1}};
-Pin weft =    {5, LOW, {0, 0}, {5, 0}, {5, 1}};
-Pin rope =    {4, LOW, {0, 0}, {4, 0}, {4, 1}};
-Pin unknown = {3, LOW, {0, 0}, {3, 0}, {3, 1}};
- 
+Pin weft =    {6, LOW, {0, 0}, {6, 0}, {6, 1}};
+Pin warp =    {5, LOW, {0, 0}, {5, 0}, {5, 1}};
+Pin manualStop = {4, LOW, {0, 0}, {4, 0}, {4, 1}};
+
+
 // every 30 sec, send pulse count to nest
-const int pulseCountInterval = 30000;
+const int pulseCountInterval = 5000;
 // check health every 1 sec
 const int healthCheckInterval = 1000;
 
@@ -34,17 +34,16 @@ uint8_t buf[RF22_MAX_MESSAGE_LEN];
 TimedAction pulseCalculator = TimedAction(pulseCountInterval, calculatePulse);
 TimedAction healthCheckCalculator = TimedAction(healthCheckInterval, healthCheck);
 void setup() {
-  pinMode(working.PIN, INPUT); // sets the pin as output
-  pinMode(pulse.PIN, INPUT); // sets the pin as output
-  pinMode(warp.PIN, INPUT); // sets the pin as output
-  pinMode(weft.PIN, INPUT); // sets the pin as output
-  pinMode(rope.PIN, INPUT); // sets the pin as output
-  pinMode(unknown.PIN, INPUT);
+  pinMode(working.PIN, INPUT);
+  pinMode(pulse.PIN, INPUT);
+  pinMode(weft.PIN, INPUT);
+  pinMode(warp.PIN, INPUT);
+  pinMode(manualStop.PIN, INPUT);
   Serial.begin(9600);
   if (manager.init())
-    Serial.println("init success");
+    Serial.println("init success for ant");
   else
-    Serial.println("init failed");
+    Serial.println("init failed for ant");
 }
 
 void loop() {
@@ -54,26 +53,26 @@ void loop() {
 }
 
 void healthCheck() {
-  checkError(warp);
-  checkError(weft);
-  checkError(rope);
-  checkError(unknown);
-  checkWorkingError(working);
+  checkError(weft, HIGH, LOW);
+  checkError(warp, HIGH, LOW);
+  checkError(manualStop, HIGH, LOW);
+  checkError(working, LOW, HIGH);
   if (digitalRead(working.PIN) == HIGH) {
-    warp.state = LOW;
     weft.state = LOW;
-    rope.state = LOW;
-    unknown.state = LOW;
+    warp.state = LOW;
+    manualStop.state = LOW;
   }
 
 }
 
 void increasePulse() {
-  int tempPulseState =  digitalRead(pulse.PIN);
-  if (tempPulseState == HIGH && pulse.state != tempPulseState) {
-    pulse.counter[1]++;
+  if (working.state == HIGH) {
+    int tempPulseState =  digitalRead(pulse.PIN);
+    if (tempPulseState == LOW && pulse.state != tempPulseState) {
+      pulse.counter[1]++;
+    }
+    pulse.state = tempPulseState;
   }
-  pulse.state = tempPulseState;
 }
 
 void calculatePulse() {
@@ -83,27 +82,14 @@ void calculatePulse() {
   pulse.counter[1] = 0;
 }
 
-void checkError(struct Pin &pin) {  
+void checkError(struct Pin &pin, int high, int low) {
   int tempState =  digitalRead(pin.PIN);
-  if (tempState == HIGH && pin.state != tempState) {
+  if (tempState == high && pin.state != tempState) {
     Serial.print("error : ");
     Serial.println(pin.PIN);
-    sendReliableMessage(pin.failed);
-  } else if (tempState == LOW && pin.state != tempState) {
-    Serial.print("fixed : ");
-    Serial.println(pin.PIN);
-    sendReliableMessage(pin.fixed);
-  }
-  pin.state = tempState;
-}
 
-void checkWorkingError(struct Pin &pin) {  
-  int tempState =  digitalRead(pin.PIN);
-  if (tempState == LOW && pin.state != tempState) {
-    Serial.print("error : ");
-    Serial.println(pin.PIN);
     sendReliableMessage(pin.failed);
-  } else if (tempState == HIGH && pin.state != tempState) {
+  } else if (tempState == low && pin.state != tempState) {
     Serial.print("fixed : ");
     Serial.println(pin.PIN);
     sendReliableMessage(pin.fixed);
@@ -131,5 +117,6 @@ void sendReliableMessage ( byte data[]) {
   else
     Serial.println("sendtoWait failed");
 }
+
 
 
