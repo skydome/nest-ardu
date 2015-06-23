@@ -21,4 +21,4 @@
 *.app
 
 # ano builds
-# .build_ano
+.build_ano
