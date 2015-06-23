@@ -6,7 +6,6 @@
 #define CLIENT_ADDRESS 1
 #define SERVER_ADDRESS 0
 
-// Singleton instance of the radio
 RF22ReliableDatagram manager(CLIENT_ADDRESS);
 
 struct Pin {
@@ -18,21 +17,26 @@ struct Pin {
 };
 
 Pin working = {8, LOW, {0, 0}, {8, 0}, {8, 1}};
-Pin pulse =   {7, LOW, {0, 0}, {    }, {    }};
+Pin pulse =   {7, LOW, {7, 0}, {    }, {    }};
 Pin weft =    {6, LOW, {0, 0}, {6, 0}, {6, 1}};
 Pin warp =    {5, LOW, {0, 0}, {5, 0}, {5, 1}};
-Pin manualStop = {4, LOW, {0, 0}, {4, 0}, {4, 1}};
-
+Pin manualStop = {4, LOW, {0, 0}, {4, 0}, {4, 1}}; 
 
 // every 30 sec, send pulse count to nest
-const int pulseCountInterval = 5000;
+const int pulseCountInterval = 1000;
 // check health every 1 sec
 const int healthCheckInterval = 1000;
+
+const int reportInterval = 1000;
+
+bool reportMe = false;
 
 uint8_t buf[RF22_MAX_MESSAGE_LEN];
 
 TimedAction pulseCalculator = TimedAction(pulseCountInterval, calculatePulse);
 TimedAction healthCheckCalculator = TimedAction(healthCheckInterval, healthCheck);
+TimedAction reporter = TimedAction(reportInterval, report);
+
 void setup() {
   pinMode(working.PIN, INPUT);
   pinMode(pulse.PIN, INPUT);
@@ -40,6 +44,7 @@ void setup() {
   pinMode(warp.PIN, INPUT);
   pinMode(manualStop.PIN, INPUT);
   Serial.begin(9600);
+  Serial.println("Starting ant...");
   if (manager.init())
     Serial.println("init success for ant");
   else
@@ -50,6 +55,8 @@ void loop() {
   increasePulse();
   healthCheckCalculator.check();
   pulseCalculator.check();
+  if (reportMe)
+    reporter.check();
 }
 
 void healthCheck() {
@@ -65,8 +72,17 @@ void healthCheck() {
 
 }
 
+void report() {
+  Serial.print("Working : ");
+  Serial.println(digitalRead(working.PIN));
+  Serial.print("pulse : ");
+  Serial.println(digitalRead(pulse.PIN));
+  Serial.print("weft : ");
+  Serial.println(digitalRead(weft.PIN));
+}
+
 void increasePulse() {
-  if (working.state == HIGH) {
+  if (digitalRead(working.PIN) == HIGH) {
     int tempPulseState =  digitalRead(pulse.PIN);
     if (tempPulseState == LOW && pulse.state != tempPulseState) {
       pulse.counter[1]++;
