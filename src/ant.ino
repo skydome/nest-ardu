@@ -115,6 +115,10 @@ void checkError(struct Pin &pin, int high, int low) {
 
 void sendReliableMessage ( byte data[]) {
 
+  Serial.print("sending data[0]:");
+  Serial.println(data[0]);
+  Serial.print("sending data[1]:");
+  Serial.println(data[1]);
   if (manager.sendtoWait(data, 2, SERVER_ADDRESS))  {
     uint8_t len = sizeof(buf);
     uint8_t from;

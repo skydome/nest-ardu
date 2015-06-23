@@ -1,4 +1,4 @@
-all: build
+all: clean build
 
 build: 
 	 ano build -m pro --cpu 16MHzatmega328
