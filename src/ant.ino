@@ -23,7 +23,7 @@ Pin warp =    {5, LOW, {0, 0}, {5, 0}, {5, 1}};
 Pin manualStop = {4, LOW, {0, 0}, {4, 0}, {4, 1}}; 
 
 // every 30 sec, send pulse count to nest
-const int pulseCountInterval = 1000;
+const int pulseCountInterval = 5000;
 // check health every 1 sec
 const int healthCheckInterval = 1000;
 
@@ -120,19 +120,19 @@ void sendReliableMessage ( byte data[]) {
   Serial.print("sending data[1]:");
   Serial.println(data[1]);
   if (manager.sendtoWait(data, 2, SERVER_ADDRESS))  {
-    uint8_t len = sizeof(buf);
-    uint8_t from;
-    if (manager.recvfromAckTimeout(buf, &len, 2000, &from))
-    {
-      Serial.print("got reply from : 0x");
-      Serial.print(from, HEX);
-      Serial.print(": ");
-      Serial.println((char*)buf);
-    }
-    else
-    {
-      Serial.println("No reply, is rf22_reliable_datagram_server running?");
-    }
+  //  uint8_t len = sizeof(buf);
+  //  uint8_t from;
+  //  if (manager.recvfromAckTimeout(buf, &len, 2000, &from))
+  //  {
+  //    Serial.print("got reply from : 0x");
+  //    Serial.print(from, HEX);
+  //    Serial.print(": ");
+  //    Serial.println((char*)buf);
+  //  }
+  //  else
+  //  {
+  //    Serial.println("No reply, is rf22_reliable_datagram_server running?");
+  //  }
   }
   else
     Serial.println("sendtoWait failed");
