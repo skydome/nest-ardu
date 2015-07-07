@@ -1,14 +1,19 @@
-all: clean build
+all: build
 
+init:
+	platformio -f init --board=pro16MHzatmega328 
+	wget http://www.airspayce.com/mikem/arduino/RF22/RF22-1.40.zip && unzip RF22-1.40.zip -d lib/ && rm RF22-1.40.zip
+	wget http://playground.arduino.cc/uploads/Code/TimedAction-1_6.zip && unzip TimedAction-1_6.zip -d lib/ && rm TimedAction-1_6.zip
+	sed -i 's/WProgram.h/Arduino.h/g' lib/TimedAction/TimedAction.h
 build: 
-	 ano build -m pro --cpu 16MHzatmega328
+	platformio -f run 
 
 upload:
-	ano upload -m pro --cpu 16MHzatmega328 -p /dev/ttyUSB$(tty)
+	platformio -f run -t upload --upload-port /dev/ttyUSB$(tty)
 
 clean:
-	ano clean
+	platformio -f run -t clean
 
 serial:
-	ano serial -p /dev/ttyUSB$(tty)
+	platformio serialports monitor -p  /dev/ttyUSB$(tty)
 
