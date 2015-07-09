@@ -17,15 +17,15 @@ struct Pin {
   const int PIN;
   int state;
   byte counter[5];
-  byte failed[2];
-  byte fixed[2];
+  byte failed[5];
+  byte fixed[5];
 };
 
-Pin working =    {8, LOW, {0, 0, 0, 0, 0}, {8, 0}, {8, 1}};
+Pin working =    {8, LOW, {0, 0, 0, 0, 0}, {8, 0, 0, 0, 0}, {8, 1, 0, 0, 0 }};
 Pin pulse =      {7, LOW, {7, 0, 0, 0, 0}, {    }, {    }};
-Pin weft =       {6, LOW, {0, 0, 0, 0, 0}, {6, 0}, {6, 1}};
-Pin warp =       {5, LOW, {0, 0, 0, 0, 0}, {5, 0}, {5, 1}};
-Pin manualStop = {4, LOW, {0, 0, 0, 0, 0}, {4, 0}, {4, 1}};
+Pin weft =       {6, LOW, {0, 0, 0, 0, 0}, {6, 0, 0, 0, 0}, {6, 1, 0, 0, 0 }};
+Pin warp =       {5, LOW, {0, 0, 0, 0, 0}, {5, 0, 0, 0, 0}, {5, 1, 0, 0, 0 }};
+Pin manualStop = {4, LOW, {0, 0, 0, 0, 0}, {4, 0, 0, 0, 0}, {4, 1, 0, 0, 0 }};
 
 // every 30 sec, send pulse count to nest
 const int pulseCountInterval = 5000;
@@ -111,11 +111,11 @@ void calculatePulse() {
   pulse.counter[2] = h;
   pulse.counter[3] = t;
   pulse.counter[4] = hic;
-  sendReliableMessage(pulse.counter, true);
+  sendReliableMessage(pulse.counter);
+  pulse.counter[1] = 0;
   pulse.counter[2] = 0;
   pulse.counter[3] = 0;
   pulse.counter[4] = 0;
-  pulse.counter[1] = 0;
 }
 
 void checkError(struct Pin &pin, int high, int low) {
@@ -124,33 +124,28 @@ void checkError(struct Pin &pin, int high, int low) {
     Serial.print("error : ");
     Serial.println(pin.PIN);
 
-    sendReliableMessage(pin.failed, false);
+    sendReliableMessage(pin.failed);
   } else if (tempState == low && pin.state != tempState) {
     Serial.print("fixed : ");
     Serial.println(pin.PIN);
-    sendReliableMessage(pin.fixed, false);
+    sendReliableMessage(pin.fixed);
   }
   pin.state = tempState;
 }
 
-void sendReliableMessage ( byte data[], bool pulse) {
+void sendReliableMessage (byte data[]) {
 
+  int length = 5;
   Serial.print("sending data[0]:");
   Serial.println(data[0]);
   Serial.print("sending data[1]:");
   Serial.println(data[1]);
-
-  int length = 2;
-
-  if(pulse){
-    length = 5;
-    Serial.print("sending data[2]:");
-    Serial.println(data[2]);
-    Serial.print("sending data[3]:");
-    Serial.println(data[3]);
-    Serial.print("sending data[4]:");
-    Serial.println(data[4]);
-  }
+  Serial.print("sending data[2]:");
+  Serial.println(data[2]);
+  Serial.print("sending data[3]:");
+  Serial.println(data[3]);
+  Serial.print("sending data[4]:");
+  Serial.println(data[4]);
 
   if (manager.sendtoWait(data, length, SERVER_ADDRESS))  {
   //  uint8_t len = sizeof(buf);
