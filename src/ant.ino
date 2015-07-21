@@ -105,7 +105,6 @@ void calculatePulse() {
   float t = dht.readTemperature();
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
-    return;
   }
   float hic = dht.computeHeatIndex(t, h, false);
   pulse.counter[2] = h;
