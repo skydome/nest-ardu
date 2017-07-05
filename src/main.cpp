@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include <Wire.h>
 
-static const char intPin = 8;
+static const char intPin = 9;
 
 void receiveEvent(int bytes);
 void requestEvent();
@@ -19,8 +19,8 @@ void setup()
 long counter = 1;
 
 void loop() {
-
   counter++;
+  Serial.println(counter);
   digitalWrite(intPin, HIGH);
   delay(20);
   digitalWrite(intPin, LOW);
@@ -28,5 +28,5 @@ void loop() {
 
 void requestEvent() {
   // Both the Arduino and RPi are little-endian, no conversion needed...
-  Wire.write((uint8_t *)&counter, sizeof(counter));
+  Wire.write("securitas");
 }

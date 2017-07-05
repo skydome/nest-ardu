@@ -12,5 +12,5 @@ clean:
 	platformio -f run -t clean
 
 serial:
-	PYTHONIOENCODING=utf-8	platformio serialports monitor -p  /dev/ttyUSB$(tty)
+	PYTHONIOENCODING=utf-8	platformio serialports monitor -p  /dev/ttyUSB$(tty) -b 4800
 
