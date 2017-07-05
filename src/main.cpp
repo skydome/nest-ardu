@@ -10,9 +10,10 @@ void setup()
 {
   pinMode(intPin, OUTPUT);
 
-	Serial.begin(9600);
+  Serial.begin(9600);
   Wire.begin(0x03);
   Wire.onRequest(requestEvent);
+  Serial.println("done!");
 }
 
 long counter = 1;
